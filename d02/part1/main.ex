@@ -4,20 +4,19 @@ defmodule Part1 do
 
   defp is_safe(list) do
     cond do
-      is_ascending(list) and all_gradual_change(list) -> 1
-      is_descending(list) and all_gradual_change(list) -> 1
+      is_ascending(list) and all_gradual(list) -> 1
+      is_descending(list) and all_gradual(list) -> 1
       true -> 0
     end
   end
 
   defp is_ascending(list), do: Enum.sort(list) == list
-
   defp is_descending(list), do: Enum.sort(list, :desc) == list
 
-  defp all_gradual_change([]), do: true
-  defp all_gradual_change([_]), do: true
+  defp all_gradual([]), do: true
+  defp all_gradual([_]), do: true
 
-  defp all_gradual_change([a, b | rest]) do
-    1 <= abs(a - b) and abs(a - b) <= 3 && all_gradual_change([b | rest])
+  defp all_gradual([a, b | rest]) do
+    1 <= abs(a - b) and abs(a - b) <= 3 && all_gradual([b | rest])
   end
 end

@@ -1,56 +1,57 @@
 defmodule Part2 do
-  def test() do
-    IO.inspect(solve([7, 6, 4, 2, 1]))
-    # IO.inspect(solve([1, 2, 7, 8, 9]))
-    # IO.inspect(solve([9, 7, 6, 2, 1]))
-    # IO.inspect(solve([1, 3, 2, 4, 5]))
-    # IO.inspect(solve([8, 6, 4, 4, 1]))
-    # IO.inspect(solve([1, 3, 6, 7, 9]))
-    :ok
-  end
+  def solve([]), do: 0
 
-  def solve([a, b, c | rest]) do
-    opts = if a - b > 0, do: [:asc], else: [:desc]
-
-    if is_gradual(a - b) do
-      solve([b, c | rest], opts, 0)
-    else
-      solve([c | rest], opts, 1)
+  def solve([head | tail]) do
+    cond do
+      is_safe(head) -> 1 + solve(tail)
+      is_sorta_safe(head) -> 1 + solve(tail)
+      true -> solve(tail)
     end
   end
 
-  def solve([], _, _), do: 0
-  def solve(_, _, 2), do: 0
+  defp is_sorta_safe(row) do
+    count =
+      sub_lists(row)
+      |> Enum.filter(&is_safe/1)
+      |> Enum.count()
 
-  def solve([a, b], [:asc], _skip_count) do
-    if is_gradual(a - b) and b > a, do: 1, else: 0
+    count > 0
   end
 
-  def solve([a, b], [:desc], _skip_count) do
-    if is_gradual(a - b) and b < a, do: 1, else: 0
-  end
-
-  def solve([a, b, c | rest], [:asc], skip_count) do
-    if a - b > 0, do: 0
-
-    case is_gradual(a - b) do
-      true -> is_ascending([a, b]) && solve([b, c | rest], [:asc], skip_count)
-      false -> is_ascending([a, c]) && solve([b, c | rest], [:asc], skip_count + 1)
+  defp is_safe(list) do
+    cond do
+      is_ascending(list) and all_gradual(list) -> true
+      is_descending(list) and all_gradual(list) -> true
+      true -> false
     end
   end
 
-  def solve([a, b, c | rest], [:desc], skip_count) do
-    if b - a > 0, do: 0
+  defp sub_lists([]), do: []
+  defp sub_lists([_]), do: []
 
-    case is_gradual(a - b) do
-      true -> is_descending([a, b]) && solve([b, c | rest], [:desc], skip_count)
-      false -> is_descending([a, c]) && solve([b, c | rest], [:desc], skip_count + 1)
-    end
+  defp sub_lists(list) do
+    0..(length(list) - 1)
+    |> Enum.map(fn skip_idx ->
+      list
+      |> Enum.with_index()
+      |> Enum.filter(fn {_, idx} -> idx != skip_idx end)
+      |> Enum.map(fn {elem, _} -> elem end)
+    end)
   end
+
+  defp dir(a, b) when a < b, do: :asc
+  defp dir(a, b) when a > b, do: :desc
+  defp dir(a, b), do: nil
 
   defp is_ascending(list), do: Enum.sort(list) == list
-
   defp is_descending(list), do: Enum.sort(list, :desc) == list
+
+  defp all_gradual([]), do: true
+  defp all_gradual([_]), do: true
+
+  defp all_gradual([a, b | rest]) do
+    is_gradual(a - b) && all_gradual([b | rest])
+  end
 
   defp is_gradual(x), do: abs(x) |> in_range
 
